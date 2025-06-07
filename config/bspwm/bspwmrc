@@ -32,3 +32,5 @@ run() {
 run sxhkd
 run picom
 run feh --bg-scale ~/wallpaper.png
+run nm-applet
+run blueman-applet

@@ -1,0 +1,47 @@
+#!/bin/sh
+
+IMPPKGS="git curl wget unzip zip p7zip linux-headers nano dkms"
+PKGS="pipewire pipewire-audio pipewire-alsa pavucontrol playerctl dunst pipewire-pulse pipewire-jack wireplumber polybar rofi kitty picom ly flatpak mesa-utils feh fastfetch network-manager-applet blueman mpv yt-dlp streamlink xorg-server xorg-apps xorg-xinit"
+DRIVERS="intel-ucode nvidia-dkms libglvnd nvidia-utils opencl-nvidia lib32-libglvnd lib32-nvidia-utils lib32-opencl-nvidia nvidia-settings"
+YAYPKGS="librewolf-bin vscodium-bin"
+
+echo "[+] Installing deps..."
+sudo pacman -S --needed --noconfirm $IMPPKGS
+
+echo "[+] Installing intel-ucode and nvidia drivers..."
+sudo pacman -S --needed --noconfirm $DRIVERS
+
+echo "[+] Installing required packages..."
+sudo pacman -S --needed --noconfirm $PKGS
+
+if ! command -v yay >/dev/null 2>&1; then
+  echo "[+] Installing yay (AUR helper)..."
+  git clone https://aur.archlinux.org/yay.git ~/yay
+  cd ~/yay && makepkg -si --noconfirm
+  cd ~ && rm -rf ~/yay
+else
+  echo "[✓] yay already installed."
+fi
+
+echo "[+] Installing required packages from AUR..."
+yay -S --noconfirm $YAYPKGS
+
+echo "[+] Enabling systemd services..."
+systemctl --user enable --now pipewire pipewire-pulse wireplumber
+sudo systemctl enable ly NetworkManager bluetooth
+
+echo "[+] Installing dotfiles..."
+git clone https://github.com/Venokii/LostArch.git
+cp -r ~/LostArch/config/* ~/.config/
+cp ~/LostArch/wallpaper.png ~
+chmod +x ~/.config/bspwm/bspwmrc
+chmod +x ~/.config/bspwm/PowerMenu
+
+echo "[*] Installing fonts..."
+git clone https://github.com/gh0stzk/dotfiles.git
+sudo mkdir -p /usr/share/fonts
+sudo cp -r dotfiles/misc/fonts/* /usr/share/fonts/
+sudo fc-cache -fv
+sudo rm -rf dotfiles
+
+echo "[✓] All done! Please reboot"
